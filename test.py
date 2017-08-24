@@ -9,15 +9,12 @@ for x in list:
 
 
 
-#link = "http://www.metacritic.com/browse/games/release-date/available/ps4/date?page=0"
-
-req = Request('http://www.metacritic.com/browse/games/release-date/available/ps4/date?page=0', headers={'User-Agent': 'Mozilla/5.0'})
-#f = urllib.request.urlopen(link)
+req = Request('http://www.metacritic.com/browse/games/release-date/available/ps4/metascore?view=detailed', headers={'User-Agent': 'Mozilla/5.0'})
 webpage = urlopen(req).read()
 stringP = str(webpage) 
-list = stringP.split("basic_stat product_title") #"<a href="
+list = stringP.split("basic_stat product_title") 
 
-print (type(stringP))
+#print (type(stringP))
 
 del list[0]
 
@@ -32,69 +29,67 @@ for l in list:
 		c = c+1
 		b = True 
 
-print (c)
+#print (c)
 
 list = list[:len(list)-(c-1)]
 
-#i = list[len(list)-1].index('"<div class="foot_wrap">\\n"')
 
 list[len(list)-1] = list[len(list)-1][:1300]
 
-#print (list[0])
 
-'"<a href="/game/playstation-4/aca-neogeo-metal-slug-2">"'  
-regex = r"([<][a][ ][h][r][e][f](.*)[n]([ ]){28}[\w])"
-#mo = re.search(regex, list[0])
-#print (mo) 
-#print()
-#print (mo.group())
-#print (mo.start())
-#print (mo.end())
-#cutOff = mo.end()-1
-#list[0] = list[0][cutOff:]
-#print (list[0])
-
-
-x = 0
-#for l in list: 
-#	print ("item")
-#	print(x)
-#	print(l) 
-#	print()
-#	x = x+1
 
 print (len(list))
 
 
-#myfile = f.read()
-#print(webpage)
 def findTitle(str):
-	goal = ""
-	for c in str:
-		if c != "\\":
-			goal=goal+c
-		else:
-			break
-	return goal 
+	
+	regex = r"([p][r][o][d][u][c][t][_][t][i][t][l][e][\"][>][<][a][ ][h][r][e][f](.*)[<][/][a][>][<][/][h])"
+	mo  = re.search(regex, str)
+	close = mo.group(1)
+	close = close[:len(close)-7]
+	regex2 = r"([>](?!<))"
+	mo2 = re.search(regex2, close)
+	
+	goal = close[mo2.start()+1:]
 
-print(findTitle(list[0]))
+		 
+	return goal
 
-#goal: make list of titles 
+
+
+def findScore(str):
+	regex = r"([\"][m][e][t][a][s][c][o][r][e](.*)[\"][>][0-9][0-9])"
+
+	#game scored a 100
+	regex2 = r"([\"][m][e][t][a][s][c][o][r][e](.*)[\"][>][1][0][0])"
+	mo = re.search(regex, str)
+	mo2 = re.search(regex2, str)
+
+	if mo2:
+		score = str[mo.end()-3:mo.end()]
+		return int(score)
+
+
+	score = str[mo.end()-2:mo.end()]
+	return int(score)
+
+def findDate(str):
+	regex = r"([A-Z][a-z][a-z][ ])"
+	mo = re.search(regex, str)
+	date = str[mo.start():mo.start()+12]
+	
+
+
+
+	return date
 
 
 for l in list:
-	mo = re.search(regex, l)
-	#print (mo)
-	cutOff = mo.end()-1
-	l = l[cutOff:]
-	print(findTitle(l)) #dope you found the titles! Add to tuple with score and date later 
-
-
 	
-
+	print(findTitle(l)) 
+	print (findScore(l))
+	print (findDate(l))
 	print()
-	
-
 
 
 

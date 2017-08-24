@@ -52,8 +52,10 @@ def findTitle(str):
 	
 	goal = close[mo2.start()+1:]
 
+	#goal = goal.
+
 		 
-	return goal
+	return goal.replace("\\","")
 
 
 
@@ -74,12 +76,9 @@ def findScore(str):
 	return int(score)
 
 def findDate(str):
-	regex = r"([A-Z][a-z][a-z][ ])"
+	regex = r"([A-Z][a-z][a-z][ ][0-9]{1,2}[,][ ][0-9][0-9][0-9][0-9])"
 	mo = re.search(regex, str)
-	date = str[mo.start():mo.start()+12]
-	
-
-
+	date = str[mo.start():mo.end()]
 
 	return date
 

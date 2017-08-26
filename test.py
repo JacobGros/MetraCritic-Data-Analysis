@@ -1,53 +1,14 @@
 import xlsxwriter
 import re
 import datetime
-from urllib.request import Request, urlopen
+import urllib.error
+from urllib.request import Request, urlopen 
 from decimal import Decimal
 
 list = [1,2,3,4,5,6,7,8,9]
 
 for x in list:
 	print(x)
-
-
-
-#req = Request('http://www.metacritic.com/browse/games/score/metascore/all/ps4/filtered?view=detailed&page=0', headers={'User-Agent': 'Mozilla/5.0'})
-#webpage = urlopen(req).read()
-#stringP = str(webpage) 
-#list = stringP.split("><h3 class=\"product_title\"") 
-
-
-#print (stringP)
-
-#for l in list:
-#	print("begin")
-#	print (l)
-#	print("end")
-
-#del list[0]
-
-#del list[len(list)-1]
-
-#c = 0
-#b = False
-#for l in list:
-#	if b:
-#		c = c+1
-#	if len(l) >= 5000:
-#		c = c+1
-#		b = True 
-
-#print (c)
-
-#list = list[:len(list)-(c-1)]
-
-
-#list[len(list)-1] = list[len(list)-1][:1300]
-
-
-
-#print (len(list))
-
 
 def findTitle(str):
 	
@@ -74,7 +35,8 @@ def findTitle(str):
 
 def findScore(str):
 	#game scored in 10-99
-	regex = r"([\"][m][e][t][a][s][c][o][r][e](.*)[\"][>][0-9][0-9][<][/][s])"
+	
+	regex = r"([\"][m][e][t][a][s][c][o][r][e](.*)[\"][>][0-9][0-9][<][/][s][p][a][n][>][\\][n][<][/][a][>][<][/][d][i][v][>])"
 
 	#game scored a 100
 	regex2 = r"([\"][m][e][t][a][s][c][o][r][e](.*)[\"][>][1][0][0][<])"
@@ -100,7 +62,7 @@ def findScore(str):
 	if mo == None:
 		return -1 
 
-	score = str[mo.end()-5:mo.end()-3]
+	score = str[mo.end()-21:mo.end()-19]
 	return int(score)
 
 def findDate(str):
@@ -149,16 +111,9 @@ def findDate(str):
 	
 	goal = datetime.datetime(int(year),int(month),int(day),0,0,0)
 
-	#if month == "Jan":
-		#date = "/01/".format(date[comma+2:],date[4:comma])
-
 	
 
-
-
-
 	return goal
-##for ps4 http://www.metacritic.com/browse/games/score/metascore/all/ps4/filtered?view=detailed&page=0
 
 
 def makeURLS(system):
@@ -179,10 +134,7 @@ def makeList(url):
 	webpage = urlopen(req).read()
 	stringP = str(webpage) 
 	list = stringP.split("basic_stat product_title") 
-	#list = stringP.split("><h3 class=\"product_title\"") 
-
-	#print (type(stringP))
-
+	
 	del list[0]
 
 
@@ -196,41 +148,12 @@ def makeList(url):
 		del list[len(list)-1]
 	 
 
-	
-
-
-	
-
 	i=0
 	while i<len(list):
 		if len(list[i])>1300:
 			list[i] = list[i][:1300]
 		i = i+1
 
-
-
-	#for x in list:
-	#	print (len(x))
-
-
-
-	#c = 0
-	#b = False
-	#for l in list:
-	#	if b:
-	#		c = c+1
-	#	if len(l) >= 5000:
-	#		c = c+1
-	#		b = True 
-
-#print (c)
-
-	#list = list[:len(list)-(c-1)]
-
-
-	#list[len(list)-1] = list[len(list)-1][:500]
-
-	#print (len(list[len(list)-1]))
 
 	return list
 
@@ -270,89 +193,46 @@ def makeListOfTuples(system):
 	
 
 
-	#for s in sortedGames:
-		#print (s)
-
-	#print (len(sortedGames))
-	#print(findAverageScore(sortedGames))
-	#print(findMaxScore(sortedGames))
-	#print(findMinScore(sortedGames))
-
-	stat = {'Games' : sortedGames, 'Ave' : findAverageScore(sortedGames), 'Max' : findMaxScore(sortedGames), 'Min' : findMinScore(sortedGames) }
+	stat = {'System': system, 'Games' : sortedGames, 'Ave' : findAverageScore(sortedGames), 'Max' : findMaxScore(sortedGames), 'Min' : findMinScore(sortedGames) }
 
 	return stat 
 
+def makeSysDic(system):
+	while True:
+		try:
+			stats = makeListOfTuples(system)
+			return stats
+		except (urllib.error.HTTPError,TimeoutError,urllib.error.URLError) as e:
+			if e.code == 429:
+				print ("Too many requests. Terminating")
+				return -1
+			print (" Error... retrying")
+		except (urllib.error.URLError) as e2:
+			print (" Error... retrying")
 
 
-def driver():
 
-	stats = {}
+def driver():  
 
-	ps4Stats = makeListOfTuples('ps4')
+	stats = []
 
-	stats.append(ps4Stats)
 
-	print("Ps4 Done ")
+	systemList = ['ps4','xboxone', 'switch','ps3','xbox360','wii-u','wii','ps2','xbox','gamecube']
 
-	ps3Stats = makeListOfTuples('ps3')
+	for system in systemList:
+		sysDic = makeSysDic(system)
+		if sysDic != -1:
+			stats.append(sysDic)
+			message = "{} done".format(system)
+			print(message)
 
-	stats.append(ps3Stats)
+	for s in stats:
+		print(s) 
 
-	print("Ps3 Done ")
-
-	xbx360Stats = makeListOfTuples('xbox360')
-
-	stats.append(xbx360Stats)
-
-	print("Xbox360 Done ")
-
-	wiiStats = makeListOfTuples('wii')
-
-	stats.append(wiiStats)
-
-	print("Wii Done ")
-
-	wiiuStats = makeListOfTuples('wii-u')
-
-	stats.append(wiiuStats)
-
-	print("WiiU Done ")
-
-	gamecubeStats = makeListOfTuples('gamecube')
-
-	stats.append(gamecubeStats)
-
-	print("GameCube Done ")
-
-	ps2Stats = makeListOfTuples('ps2')
-
-	stats.append(ps2Stats)
-
-	print("PS2 Done ")
-
-	xboxStats = makeListOfTuples('xbox')
-
-	stats.append(xboxStats)
-
-	print("Xbox Done ")
-
-	switchStats = makeListOfTuples('switch')
-
-	stats.append(switchStats)
-
-	print("Switch Done ")
-
-	xOneStats = makeListOfTuples('xboxone')
-
-	stats.append(xOneStats)
-
-	print("XboxOne Done ")
 
 driver()
 
-#stats = {}
-
-#stats.append()
+#NEXT ADD Write to Xcel method that takes a list of {System, {Game,Score,Date}, Max Min}
 
 #for ps3       http://www.metacritic.com/browse/games/score/metascore/all/ps3/filtered?view=detailed&page=0
 #for 360       http://www.metacritic.com/browse/games/score/metascore/all/xbox360/filtered?view=detailed&page=0
